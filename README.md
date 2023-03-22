@@ -1,11 +1,13 @@
-AlpacaChat
-==========
+Alpaca for iPhone
+=================
 
-A Swift library that runs Alpaca-LoRA prediction locally
+A Swift library that runs Alpaca prediction locally
 to implement ChatGPT like app on Apple platform devices.
 
 It is basically a wrapper for [alpaca.cpp](https://github.com/antimatter15/alpaca.cpp)
-that provides a simple Swift API for it.
+that provides a simple Swift API for it. 
+
+It uses [Wu Caize's](https://github.com/Zepan/llama.cpp/commit/03ba421c74109b5bff297b207a1b47f8cc6fc05e) mmap implementation to get around memory limits.
 
 ```
 import AlpacaChat
@@ -27,10 +29,7 @@ for try await token in chat.predictTokens(for: prompt) {
 Model
 -----
 
-Read [alpaca.cpp](https://github.com/antimatter15/alpaca.cpp),
-[alpaca-lora](https://github.com/tloen/alpaca-lora), and
-[llma.cpp](https://github.com/ggerganov/llama.cpp),
-then create 4-bits quantized `ggml` model bin file.
+Downlod [ggml-alpaca-7b-q4.bin](https://huggingface.co/Sosaka/Alpaca-native-4bit-ggml/blob/main/ggml-alpaca-7b-q4.bin).
 
 Place it in `/Applications/AlpacaChatApp/Resouces/model.bin` for example,
 and build app and run it.

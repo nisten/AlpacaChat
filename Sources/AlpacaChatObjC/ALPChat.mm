@@ -29,7 +29,7 @@ NSString * const ALPChatModelErrorDomain = @"ALPChatModelErrorDomain";
     gpt_vocab vocab;
     llama_model model;
 
-    if (!llama_model_load(URL.fileSystemRepresentation, model, vocab, contextSize)) {
+    if (!llama_model_load_lowmem(URL.fileSystemRepresentation, model, vocab, contextSize)) {
         if (error) {
             NSString * const failureReason = [[NSString alloc] initWithFormat:@"failed to load model: %@", URL];
             NSDictionary * const userInfo = @{
@@ -145,6 +145,7 @@ NSString * const ALPChatErrorDomain = @"ALPChatErrorDomain";
 {
     // Use mostly default values.
     _params.temp = 0.1f;
+    
 
     const int32_t seed = (int32_t)time(NULL);
     _rng = std::mt19937(seed);
@@ -152,12 +153,20 @@ NSString * const ALPChatErrorDomain = @"ALPChatErrorDomain";
     _n_past = 0;
     _n_remaining_tokens = 0;
 
-    _initial_tokens = ::llama_tokenize(_model->_vocab, " Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n", true);
+//    _initial_tokens = ::llama_tokenize(_model->_vocab, " Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n", true);
+    _initial_tokens = ::llama_tokenize(_model->_vocab, " \n\n", true);
     _request_tokens = ::llama_tokenize(_model->_vocab, "## Instruction:\n\n", true);
     _response_tokens = ::llama_tokenize(_model->_vocab, "\n## Response:\n\n", false);
 
     _last_n_tokens = std::vector<gpt_vocab::id>(_params.repeat_last_n);
     std::fill(_last_n_tokens.begin(), _last_n_tokens.end(), 0);
+    
+    _params.n_threads = (int32_t) std::thread::hardware_concurrency();
+    
+    fprintf(stderr, "%s: hardware concurrency = %d\n", __func__, (int32_t) std::thread::hardware_concurrency());
+    fprintf(stderr, "%s: n_threads = %d\n", __func__, _params.n_threads);
+
+    
 }
 
 - (id<ALPChatCancellable>)predictTokensForPrompt:(NSString *)prompt
@@ -225,8 +234,11 @@ NSString * const ALPChatErrorDomain = @"ALPChatErrorDomain";
         // Predict
         if (_embd.size() > 0) {
 #if DEBUG
+            const int64_t t_start_sample_us = ggml_time_us();
             fprintf(stderr, "start predicting...\n");
 #endif // DEBUG
+            
+            
             if (!llama_eval(_model->_model, _params.n_threads, _n_past, _embd, _logits, _mem_per_token)) {
                 if (completionHandler) {
                     NSError * const error = [[NSError alloc] initWithDomain:ALPChatErrorDomain
@@ -237,7 +249,7 @@ NSString * const ALPChatErrorDomain = @"ALPChatErrorDomain";
                 return;
             }
 #if DEBUG
-            fprintf(stderr, "done\n");
+            fprintf(stderr, "done %8.2f ms\n", (ggml_time_us() - t_start_sample_us) / 1000.0f);
 #endif // DEBUG
         }
 
