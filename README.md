@@ -29,7 +29,7 @@ for try await token in chat.predictTokens(for: prompt) {
 Model
 -----
 
-Downlod [ggml-alpaca-7b-q4.bin](https://huggingface.co/Sosaka/Alpaca-native-4bit-ggml/blob/main/ggml-alpaca-7b-q4.bin).
+Downlod `ggml-alpaca-7b-q4.bin`.
 
 Place it in `/Applications/AlpacaChatApp/Resouces/model.bin` for example,
 and build app and run it.
