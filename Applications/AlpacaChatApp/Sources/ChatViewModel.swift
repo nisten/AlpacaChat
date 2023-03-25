@@ -49,19 +49,24 @@ final class ChatViewModel: ObservableObject {
             messages.append(message)
             return
         }
-
+        var responseMessage = Message(sender: .system, isLoading: true, text: "")
+        messages.append(responseMessage)
+        let responseMessageIndex = messages.endIndex - 1
         do {
-            var responseMessage = Message(sender: .system, isLoading: true, text: "")
-            messages.append(responseMessage)
-            let responseMessageIndex = messages.endIndex - 1
             for try await token in chat.predictTokens(for: text) {
-                responseMessage.isLoading = false
                 responseMessage.text += token
                 messages[responseMessageIndex] = responseMessage
             }
         } catch {
-            let message = Message(sender: .system, text: error.localizedDescription)
-            messages.append(message)
+            if(responseMessage.text == ""){
+                responseMessage.text = error.localizedDescription;
+            }else{
+                responseMessage.text += "—";
+            }
+//            let message = Message(sender: .system, text: error.localizedDescription)
+//            messages.append(message)
         }
+        responseMessage.isLoading = false
+        messages[responseMessageIndex] = responseMessage
     }
 }

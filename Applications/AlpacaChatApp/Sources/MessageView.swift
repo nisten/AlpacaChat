@@ -18,21 +18,30 @@ struct MessageView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         case .system:
-            Text("Alpaca")
+            Text(
+                message.isLoading ? "Alpaca (typing...)" : "Alpaca"
+            )
                 .font(.caption)
                 .foregroundColor(.secondary)
+//            if message.isLoading {
+//                ProgressView()
+//            }
         }
     }
 
     @ViewBuilder
     private func messageContent(for message: Message) -> some View {
-        if message.isLoading {
+        if message.isLoading && message.text == "" {
             ProgressView()
         } else {
             Text(message.text)
                 .padding(12.0)
-                .background(Color.secondary.opacity(0.2))
-                .cornerRadius(12.0)
+                .background(
+                    RoundedRectangle(cornerRadius: 12.0)
+                        .fill(message.sender == .system ? Color.blue : Color.secondary.opacity(0.2))
+                )
+                .foregroundColor(message.sender == .system ? .white : .primary)
+            
         }
     }
 
@@ -42,7 +51,7 @@ struct MessageView: View {
                 Spacer()
             }
 
-            VStack(alignment: .leading, spacing: 6.0) {
+            VStack(alignment: message.sender == .system ? .leading : .trailing, spacing: 6.0) {
                 senderLabel(for: message.sender)
                 messageContent(for: message)
             }
@@ -57,5 +66,7 @@ struct MessageView: View {
 struct MessageView_Previews: PreviewProvider {
     static var previews: some View {
         MessageView(message: Message(sender: .user, text: "Hello, world!"))
+        MessageView(message: Message(sender: .system,
+                                     isLoading: true, text: "Hello, world!"))
     }
 }
